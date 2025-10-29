@@ -1,0 +1,108 @@
+-- Load Rayfield UI
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Create the main window
+local Window = Rayfield:CreateWindow({
+    Name = "YT: Pimpi Scripter",
+    Icon = 0, 
+    LoadingTitle = "POks HUB",
+    LoadingSubtitle = "by poks",
+    ShowText = "Poks", 
+    Theme = "Default", 
+    ToggleUIKeybind = "K", 
+
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, 
+        FileName = "Poks hub"
+    },
+
+    Discord = {
+        Enabled = false, 
+        Invite = "noinvitelink", 
+        RememberJoins = true 
+    },
+
+    KeySystem = false, 
+    KeySettings = {
+        Title = "Untitled",
+        Subtitle = "Key System",
+        Note = "No method of obtaining the key is provided",
+        FileName = "Key", 
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"Hello"}
+    }
+})
+
+-- Create main tab and section
+local MainTab = Window:CreateTab("🏚️ Home", nil)
+local MainSection = MainTab:CreateSection("Player Tools")
+
+-- Notification
+Rayfield:Notify({
+    Title = "Legend",
+    Content = "New GUI Loaded",
+    Duration = 6.5,
+    Image = 4483362458,
+})
+
+-- Infinite Jump Toggle
+local InfiniteJumpEnabled = false
+
+local Button = MainTab:CreateButton({
+    Name = "🌀 Toggle Infinite Jump",
+    Callback = function()
+        InfiniteJumpEnabled = not InfiniteJumpEnabled
+        Rayfield:Notify({
+            Title = "Infinite Jump",
+            Content = InfiniteJumpEnabled and "Enabled!" or "Disabled!",
+            Duration = 3,
+        })
+    end,
+})
+
+-- Input listener for infinite jump
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        local player = game:GetService("Players").LocalPlayer
+        if player and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+        end
+    end
+end)
+
+-- Walk Speed Slider
+local WalkSpeedSlider = MainTab:CreateSlider({
+    Name = "🏃 Walk Speed",
+    Range = {0, 300},
+    Increment = 1,
+    Suffix = " Speed",
+    CurrentValue = 16,
+    Flag = "WalkSpeedSlider",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            player.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = Value
+        end
+    end,
+})
+
+-- Jump Power Slider
+local JumpPowerSlider = MainTab:CreateSlider({
+    Name = "🦘 Jump Power",
+    Range = {0, 300},
+    Increment = 1,
+    Suffix = " Power",
+    CurrentValue = 50,
+    Flag = "JumpPowerSlider",
+    Callback = function(Value)
+        local player = game.Players.LocalPlayer
+        if player and player.Character and player.Character:FindFirstChildOfClass("Humanoid") then
+            player.Character:FindFirstChildOfClass("Humanoid").JumpPower = Value
+        end
+    end,
+})
