@@ -1,0 +1,256 @@
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+local InviteCode = "Sj8UWzkZgZ"
+local DiscordAPI = "https://discord.com/api/v10/invites/" .. InviteCode .. "?with_counts=true&with_expiration=true"
+
+local Response
+local ErrorMessage = nil
+
+WindUI:AddTheme({
+    Name = "Arkenzia",
+
+    Accent = WindUI:Gradient({
+        ["0"] = { Color = Color3.fromHex("#FF8C00"), Transparency = 0 },
+        ["100"] = { Color = Color3.fromHex("#FFD700"), Transparency = 0 },
+    }, {
+        Rotation = 0,
+    }),
+
+    Background = WindUI:Gradient({
+        ["0"] = { Color = Color3.fromHex("#4B1E00"), Transparency = 0 },
+        ["100"] = { Color = Color3.fromHex("#8B4500"), Transparency = 0 },
+    }, {
+        Rotation = 90,
+    }),
+
+    Icon = WindUI:Gradient({
+        ["0"] = { Color = Color3.fromHex("#FFE8B0"), Transparency = 0 },
+        ["100"] = { Color = Color3.fromHex("#FFFFFF"), Transparency = 0 },
+    }, {
+        Rotation = 0,
+    }),
+
+    Dialog = Color3.fromHex("#1a1a1a"),
+    Outline = Color3.fromHex("#FFFFFF"),
+    Text = Color3.fromHex("#FFFFFF"),
+    Placeholder = Color3.fromHex("#7a7a7a"),
+    Button = Color3.fromHex("#52525b")
+})
+function gradient(t)
+	local r = ""
+	local c = {
+		Color3.fromRGB(255,120,0),
+		Color3.fromRGB(255,150,30),
+		Color3.fromRGB(255,180,60),
+		Color3.fromRGB(255,210,90),
+		Color3.fromRGB(255,240,120)
+	}
+	local clean = t:gsub("[^%w]", "")
+	local len = #clean
+	local index = 1
+	for i = 1, #t do
+		local ch = t:sub(i,i)
+		if ch:match("[%w]") then
+			local x = (index-1)/math.max(len-1,1)
+			local pos = x * (#c - 1)
+			local low = math.clamp(math.floor(pos) + 1, 1, #c)
+			local high = math.clamp(low + 1, 1, #c)
+			local c1, c2 = c[low], c[high]
+			local blend = pos % 1
+			local rR = c1.R + (c2.R - c1.R) * blend
+			local rG = c1.G + (c2.G - c1.G) * blend
+			local rB = c1.B + (c2.B - c1.B) * blend
+			r ..= string.format('<font color="rgb(%d,%d,%d)">%s</font>', rR*255, rG*255, rB*255, ch)
+			index += 1
+		else
+			r ..= ch
+		end
+	end
+	return r
+end
+local Window = WindUI:CreateWindow({
+    Title = gradient("YT: PimpiScripter"),
+    Author = "by PimpiScripter & Arkenzia",
+    Folder = "pimpiScripter",
+    Size = UDim2.fromOffset(305, 260),
+    
+    Transparent = true,
+    Theme = "Arkenzia",
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+})
+
+Window:Tag({
+    Title = "v1.0.1",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 12,
+})
+WindUI:Notify({
+    Title = "From arkenzia and pimpi",
+    Content = "hello",
+    Duration = 3,
+    Icon = "bird",
+})
+--- skibidi
+local Info = Window:Tab({
+    Title = gradient("Home Tab"),
+    Icon = "house",
+    Locked = false,
+})
+local Main = Window:Tab({
+    Title = gradient("Player Adjustments"),
+    Icon = "armchair",
+    Locked = false,
+})
+
+xpcall(function()
+    Response = game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({
+        Url = DiscordAPI,
+        Method = "GET",
+        Headers = {
+            ["Accept"] = "application/json"
+        }
+    }).Body)
+end, function(err)
+    warn("err fetching discord info: " .. tostring(err))
+    ErrorMessage = tostring(err)
+    Response = nil
+end)
+
+if Response and Response.guild then
+    local ParagraphConfig = {
+        Title = Response.guild.name,
+        Desc =
+            ' <font color="#52525b">•</font> Member Count: ' .. tostring(Response.approximate_member_count) ..
+            '\n <font color="#16a34a">•</font> Online Count: ' .. tostring(Response.approximate_presence_count)
+        ,
+        Image = "https://cdn.discordapp.com/icons/" .. Response.guild.id .. "/" .. Response.guild.icon .. ".png?size=256",
+        ImageSize = 42,
+        Buttons = {
+            {
+                Icon = "link",
+                Title = "Copy Discord Invite",
+                Callback = function()
+                    pcall(function()
+                        setclipboard("https://discord.gg/" .. InviteCode)
+                    end)
+                end
+            },
+            {
+                Icon = "refresh-cw",
+                Title = "Update Info",
+                Callback = function()
+                    xpcall(function()
+                        local UpdatedResponse = game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({
+                            Url = DiscordAPI,
+                            Method = "GET",
+                        }).Body)
+                        
+                        if UpdatedResponse and UpdatedResponse.guild then
+                            DiscordInfo:SetDesc(
+                                ' <font color="#52525b">•</font> Member Count: ' .. tostring(UpdatedResponse.approximate_member_count) ..
+                                '\n <font color="#16a34a">•</font> Online Count: ' .. tostring(UpdatedResponse.approximate_presence_count)
+                            )
+                        end
+                    end, function(err)
+                        warn("err updating discord info: " .. tostring(err))
+                    end)
+                end
+            }
+        }
+    }
+    
+    if Response.guild.banner then
+        ParagraphConfig.Thumbnail = "https://cdn.discordapp.com/banners/" .. Response.guild.id .. "/" .. Response.guild.banner .. ".png?size=256"
+        ParagraphConfig.ThumbnailSize = 80
+    end
+    
+    local DiscordInfo = Info:Paragraph(ParagraphConfig)
+else
+    Info:Paragraph({
+        Title = "Error when receiving information about the Discord server",
+        Desc = ErrorMessage or "Unknown error occurred",
+        Image = "triangle-alert",
+        ImageSize = 26,
+        Color = "Red",
+    })
+end
+
+local RingtaSped = Main:Section({
+	Title = gradient("— Player Adjustments—"),
+	TextXAlignment = "Center",
+	TextSize = 15,
+	Opened = false,
+	Box = true,
+})
+RingtaSped:Section({
+	Title = gradient("— LocalPlayer —"),
+	TextXAlignment = "Left",
+	TextSize = 17,
+	Opened = false,
+	Box = true,
+})
+RingtaSped:Divider()
+RingtaSped:Paragraph({
+    Title = gradient("Local Player"),
+    Desc = "This is where you uhh edit yourself",
+    Icon = "clipboard"
+})
+RingtaSped:Divider()
+RingtaSped:Input({
+    Title = gradient("Walkspeed"),
+    Value = tostring(game.Players.LocalPlayer.Character.Humanoid.WalkSpeed),
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "",
+    Callback = function(input)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(input) or 16
+    end
+})
+
+RingtaSped:Input({
+    Title = gradient("JumpPower"),
+    Value = tostring(game.Players.LocalPlayer.Character.Humanoid.JumpPower),
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "",
+    Callback = function(input)
+        game.Players.LocalPlayer.Character.Humanoid.JumpHeight = tonumber(input) or 50
+    end
+})
+
+RingtaSped:Input({
+    Title = gradient("Field of View"),
+    Value = tostring(workspace.CurrentCamera.FieldOfView),
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "",
+    Callback = function(input)
+        workspace.CurrentCamera.FieldOfView = tonumber(input) or 70
+    end
+})
+
+RingtaSped:Input({
+    Title = gradient("Gravity"),
+    Value = tostring(workspace.Gravity),
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "",
+    Callback = function(input)
+        workspace.Gravity = tonumber(input) or 196.2
+    end
+})
+
+RingtaSped:Input({
+    Title = gradient("HipHeight"),
+    Value = "0",
+    InputIcon = "bird",
+    Type = "Input",
+    Placeholder = "",
+    Callback = function(input)
+        game.Players.LocalPlayer.Character.Humanoid.HipHeight = tonumber(input) or 0
+    end
+})
